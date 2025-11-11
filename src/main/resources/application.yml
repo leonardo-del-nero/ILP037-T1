@@ -1,0 +1,47 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: user-service
+  jackson:
+    mapper:
+      default-view-inclusion: true
+  flyway:
+    enabled: false
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:userServicedb
+    username: sa
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+logging:
+  level:
+    br:
+      com: 
+        project: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+        orm:
+          jdbc:
+            bind: TRACE
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*' 
