@@ -1,9 +1,48 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR">
 <head>
-  <title>Hello World</title>
+  <meta charset="UTF-8">
+  <title>User Service</title>
 </head>
 <body>
-  <h1>Hello World</h1>
+  <header>
+    <h1>Sistema de Cadastro de Funcionários</h1>
+  </header>
+  <main>
+    <section>
+      <h2>Lista de funcionários</h2>
+      <ul id="listaUsuarios"></ul>
+    </section>
+  </main>
+
+
+  <button id="btnListar" value="/userService/users" class='requestButton'>Listar todos</button>
+  
+
+  <script>
+    // find all
+    document.getElementById('btnListar').addEventListener('click', () => {
+      fetch('/userService/users', {
+        headers: {
+          'X-Tenant-ID': 'bradev',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Erro na requisição');
+        return response.json();
+      })
+      .then(data => {
+        const lista = document.getElementById('listaUsuarios');
+        lista.innerHTML = '';
+        data.forEach(u => {
+          const li = document.createElement('li');
+          li.textContent = `${u.username}`;
+          lista.appendChild(li);
+        });
+      })
+      .catch(err => alert('Falha: ' + err.message));
+    });
+  </script>
 </body>
 </html>
