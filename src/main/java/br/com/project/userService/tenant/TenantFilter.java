@@ -26,8 +26,7 @@ public class TenantFilter extends OncePerRequestFilter  {
         // Get tenant from header "x-tenant"
         String tenant = request.getHeader("x-tenant");
         if(!StringUtils.hasText(tenant)){
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing or unknown tenant");
-            return;
+        	tenant = "bradev";
         }
         tenantIdentifierResolver.setCurrentTenant(tenant);
 
