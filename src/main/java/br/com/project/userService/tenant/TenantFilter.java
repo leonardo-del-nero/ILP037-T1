@@ -23,15 +23,23 @@ public class TenantFilter extends OncePerRequestFilter  {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         
-        // Get tenant from header "x-tenant"
         String tenant = request.getHeader("x-tenant");
-        if(!StringUtils.hasText(tenant)){
-        	tenant = "bradev";
+        
+        if (request.getRequestURI().startsWith("/userService/")) {
+            if(!StringUtils.hasText(tenant)){
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Header x-tenant é obrigatório para a API");
+                return;
+            }
+        } else {
+            if(!StringUtils.hasText(tenant)){
+                tenant = "bradev";
+            }
         }
+        
         tenantIdentifierResolver.setCurrentTenant(tenant);
 
         // Proceed with the next filter in the chain
         filterChain.doFilter(request, response);
     }
-
 }

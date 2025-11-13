@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Service - Gerenciar Usuários</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    
+    <style>
+        .tenant-badge {
+            background-color: #6f42c1;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        .table-actions {
+            white-space: nowrap;
+        }
+        .sidebar {
+            min-height: calc(100vh - 56px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-people-fill"></i> User Service
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <span class="navbar-text me-3">
+                    Tenant: <span id="currentTenant" class="tenant-badge">Não definido</span>
+                </span>
+                
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
+                            id="tenantDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-building"></i> Alterar Tenant
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="setTenant('bradev')">bradev</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <div class="px-3 py-2">
+                                <input type="text" class="form-control form-control-sm" 
+                                       id="customTenant" placeholder="Custom tenant">
+                                <button type="button" class="btn btn-primary btn-sm w-100 mt-2" 
+                                        onclick="setTenant(document.getElementById('customTenant').value)">
+                                    Definir
+                                </button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Navigation -->
+            <div class="col-md-3 col-lg-2 bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="bi bi-house-door"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/users">
+                                <i class="bi bi-people"></i> Gerenciar Usuários
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/users/new">
+                                <i class="bi bi-person-plus"></i> Novo Usuário
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="container mt-4">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Gerenciar Usuários</h1>
+                        <a href="/users/new" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Novo Usuário
+                        </a>
+                    </div>
+
+                    <!-- Alertas -->
+                    <div th:if="${currentTenant == null}" class="alert alert-warning" role="alert">
+                        Defina um tenant no cabeçalho para visualizar os usuários.
+                    </div>
+
+                    <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <span th:text="${param.success}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <span th:text="${param.error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <!-- Tabela de Usuários -->
+                    <div class="card" th:if="${currentTenant != null}">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Lista de Usuários</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Roles</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <!-- Preenchido via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div id="loadingMessage" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <p class="mt-2">Carregando usuários...</p>
+                            </div>
+                            
+                            <div id="emptyMessage" class="text-center d-none">
+                                <i class="bi bi-people display-1 text-muted"></i>
+                                <h5 class="text-muted">Nenhum usuário encontrado</h5>
+                                <p class="text-muted">Clique em "Novo Usuário" para adicionar o primeiro usuário.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light border-top">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <span class="text-muted">User Service &copy; 2024</span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="text-muted" th:text="'Tenant atual: ' + (${currentTenant} ?: 'Não definido')"></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let currentTenant = '';
+
+        function setTenant(tenant) {
+            if (tenant && tenant.trim() !== '') {
+                currentTenant = tenant.trim();
+                localStorage.setItem('currentTenant', currentTenant);
+                
+                // Fazer uma requisição para definir o tenant
+                fetch('/set-tenant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `tenant=${encodeURIComponent(currentTenant)}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        throw new Error('Falha ao definir tenant');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao definir tenant: ' + error.message);
+                });
+            } else {
+                alert('Por favor, insira um tenant válido.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado - Iniciando users.html');
+            
+            const savedTenant = localStorage.getItem('currentTenant');
+            if (savedTenant) {
+                currentTenant = savedTenant;
+                const tenantElement = document.getElementById('currentTenant');
+                if (tenantElement) {
+                    tenantElement.textContent = savedTenant;
+                }
+                
+                // Também definir no backend ao carregar a página
+                fetch('/set-tenant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `tenant=${encodeURIComponent(savedTenant)}`
+                })
+                .then(() => {
+                    console.log('Tenant sincronizado com backend');
+                    loadUsers();
+                })
+                .catch(error => {
+                    console.error('Erro ao definir tenant:', error);
+                    loadUsers(); // Tentar carregar mesmo com erro
+                });
+            } else {
+                console.log('Nenhum tenant definido');
+                const loadingMessage = document.getElementById('loadingMessage');
+                if (loadingMessage) {
+                    loadingMessage.style.display = 'none';
+                }
+            }
+        });
+
+        function loadUsers() {
+            const tenant = localStorage.getItem('currentTenant');
+            console.log('loadUsers chamado. Tenant:', tenant);
+
+            if (!tenant) {
+                console.log('Tenant não definido no loadUsers');
+                const loadingMessage = document.getElementById('loadingMessage');
+                if (loadingMessage) {
+                    loadingMessage.style.display = 'none';
+                }
+                return;
+            }
+
+            const loadingMessage = document.getElementById('loadingMessage');
+            const emptyMessage = document.getElementById('emptyMessage');
+            const tableBody = document.getElementById('usersTableBody');
+
+            console.log('Fazendo requisição para /userService/users com tenant:', tenant);
+
+            // Fazer a requisição para a API
+            fetch('/userService/users', {
+                headers: { 
+                    'x-tenant': tenant
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (response.status === 400) {
+                    throw new Error('Tenant não definido ou inválido');
+                }
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(users => {
+                console.log('Usuários recebidos da API:', users);
+                
+                // Esconder loading
+                if (loadingMessage) {
+                    loadingMessage.style.display = 'none';
+                }
+                
+                // Verificar se há usuários
+                if (!users || users.length === 0) {
+                    console.log('Nenhum usuário encontrado');
+                    if (emptyMessage) {
+                        emptyMessage.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                console.log(`${users.length} usuários encontrados`);
+                
+                // Limpar tabela e preencher com dados
+                if (tableBody) {
+                    tableBody.innerHTML = '';
+                    users.forEach(user => {
+                        console.log('Processando usuário:', user);
+                        const row = tableBody.insertRow();
+                        
+                        // Formatar roles para exibição
+                        let rolesHtml = '';
+                        if (user.roles && Array.isArray(user.roles)) {
+                            rolesHtml = user.roles.map(role => 
+                                `<span class="badge bg-secondary me-1">${escapeHtml(role)}</span>`
+                            ).join('');
+                        } else if (user.roles) {
+                            rolesHtml = `<span class="badge bg-secondary me-1">${escapeHtml(user.roles)}</span>`;
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${escapeHtml(user.username)}</td>
+                            <td>${rolesHtml}</td>
+                            <td class="table-actions">
+                                <a href="/users/${user.id}/edit" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+                                    <i class="bi bi-trash"></i> Excluir
+                                </button>
+                            </td>
+                        `;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro completo ao carregar usuários:', error);
+                // Esconder loading e mostrar erro
+                if (loadingMessage) {
+                    loadingMessage.style.display = 'none';
+                }
+                showAlert('error', 'Erro ao carregar usuários: ' + error.message);
+            });
+        }
+
+        function deleteUser(userId) {
+            if (!confirm('Tem certeza que deseja excluir este usuário?')) {
+                return;
+            }
+
+            const tenant = localStorage.getItem('currentTenant');
+            
+            fetch(`/userService/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'x-tenant': tenant }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showAlert('success', 'Usuário excluído com sucesso!');
+                    loadUsers();
+                } else {
+                    throw new Error('Falha ao excluir usuário');
+                }
+            })
+            .catch(error => {
+                showAlert('error', 'Erro ao excluir usuário: ' + error.message);
+            });
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showAlert(type, message) {
+            // Remove alertas existentes (exceto alertas de tenant)
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => {
+                if (!alert.classList.contains('alert-warning') || !alert.textContent.includes('tenant')) {
+                    alert.remove();
+                }
+            });
+            
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Adiciona o alerta no início do conteúdo
+            const content = document.querySelector('main .container');
+            if (content) {
+                content.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+        }
+
+        // Recarregar quando o tenant mudar em outra aba
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'currentTenant') {
+                console.log('Tenant mudou no storage, recarregando...');
+                loadUsers();
+            }
+        });
+    </script>
+</body>
+</html>
