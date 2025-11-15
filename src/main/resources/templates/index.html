@@ -35,25 +35,28 @@
                 </span>
                 
                 <div class="dropdown">
-                  <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
-                          id="tenantDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="bi bi-building"></i> Alterar Tenant
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                      <li><a class="dropdown-item" href="#" onclick="setTenant('bradev')">bradev</a></li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li>
-                          <div class="px-3 py-2">
-                              <input type="text" class="form-control form-control-sm" 
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
+                            id="tenantDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-building"></i> Alterar Tenant
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="setTenant('bradev')">
+                            <i class="bi bi-1-circle me-2"></i>bradev
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <!-- Os tenants customizados serão inseridos aqui automaticamente -->
+                        <li>
+                            <div class="px-3 py-2">
+                                <input type="text" class="form-control form-control-sm" 
                                     id="customTenant" placeholder="Digite o tenant">
-                              <button type="button" class="btn btn-primary btn-sm w-100 mt-2" 
-                                      onclick="setCustomTenant()">
-                                  Definir Custom
-                              </button>
-                          </div>
-                      </li>
-                  </ul>
-              </div>
+                                <button type="button" class="btn btn-primary btn-sm w-100 mt-2" 
+                                        onclick="setCustomTenant()">
+                                    <i class="bi bi-plus-circle"></i> Adicionar Tenant
+                                </button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -167,6 +170,25 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const savedTenant = localStorage.getItem('currentTenant');
+            if (savedTenant) {
+                currentTenant = savedTenant;
+                const tenantElement = document.getElementById('currentTenant');
+                if (tenantElement) {
+                    tenantElement.textContent = savedTenant;
+                }
+                
+                fetch('/set-tenant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `tenant=${encodeURIComponent(savedTenant)}`
+                }).catch(error => console.error('Erro ao sincronizar tenant:', error));
+            }
+            
+            loadTenantsDropdown();
+            
             const tenant = localStorage.getItem('currentTenant');
             if (tenant) {
                 updateUserStats(tenant);
@@ -208,19 +230,23 @@
         let currentTenant = '';
 
         function setTenant(tenant) {
-            console.log('SetTenant chamado com:', tenant);
-            
             if (tenant && tenant.trim() !== '') {
                 currentTenant = tenant.trim();
                 localStorage.setItem('currentTenant', currentTenant);
-
+                
+                // Salvar tenants customizados (exceto os padrão)
+                const defaultTenants = ['tenant1', 'tenant2', 'tenant3', 'bradev'];
+                if (!defaultTenants.includes(currentTenant)) {
+                    saveCustomTenant(currentTenant);
+                }
+                
+                // Atualizar visualmente
                 const tenantElement = document.getElementById('currentTenant');
                 if (tenantElement) {
                     tenantElement.textContent = currentTenant;
                 }
                 
-                console.log('Enviando tenant para backend:', currentTenant);
-
+                // Resto do código original...
                 fetch('/set-tenant', {
                     method: 'POST',
                     headers: {
@@ -229,20 +255,16 @@
                     body: `tenant=${encodeURIComponent(currentTenant)}`
                 })
                 .then(response => {
-                    console.log('Resposta do set-tenant:', response.status);
                     if (response.ok) {
-                        console.log('Tenant definido com sucesso, recarregando...');
-                        // Pequeno delay para garantir que a sessão foi atualizada
                         setTimeout(() => {
                             window.location.reload();
                         }, 300);
                     } else {
-                        throw new Error('Falha ao definir tenant no servidor');
+                        throw new Error('Falha ao definir tenant');
                     }
                 })
                 .catch(error => {
                     console.error('Erro ao definir tenant:', error);
-                    // Mesmo com erro, recarregar para tentar aplicar o tenant
                     setTimeout(() => {
                         window.location.reload();
                     }, 300);
@@ -271,17 +293,134 @@
             }
         });
 
+        const CUSTOM_TENANTS_KEY = 'customTenants';
+
+        function getCustomTenants() {
+            const stored = localStorage.getItem(CUSTOM_TENANTS_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function setCustomTenant() {
+            const customTenantInput = document.getElementById('customTenant');
+            console.log('setCustomTenant chamado');
+            
+            if (customTenantInput && customTenantInput.value.trim() !== '') {
+                const tenant = customTenantInput.value.trim();
+                console.log('Tenant a ser salvo:', tenant);
+                
+                saveCustomTenant(tenant);
+                console.log('Tenant salvo no localStorage');
+                
+                loadTenantsDropdown();
+                console.log('Dropdown atualizado');
+                
+                const dropdownElement = document.getElementById('tenantDropdown');
+                const dropdown = bootstrap.Dropdown.getInstance(dropdownElement);
+                if (dropdown) {
+                    dropdown.hide();
+                }
+
+                customTenantInput.value = '';
+                
+                console.log('Chamando setTenant com:', tenant);
+                setTenant(tenant);
+            } else {
+                alert('Por favor, digite um nome para o tenant customizado.');
+            }
+        }
+
+        function loadTenantsDropdown() {
+            const customTenants = getCustomTenants();
+            console.log('Carregando tenants para dropdown:', customTenants);
+            
+            const dropdownMenu = document.querySelector('#tenantDropdown + .dropdown-menu');
+            
+            if (!dropdownMenu) {
+                console.log('Dropdown menu não encontrado');
+                return;
+            }
+            
+            // Limpar APENAS os itens de tenants customizados (não remover o form)
+            const existingCustomItems = dropdownMenu.querySelectorAll('.custom-tenant-item');
+            console.log('Itens customizados a remover:', existingCustomItems.length);
+            existingCustomItems.forEach(item => {
+                // Verificar se é um item de tenant (não o form)
+                if (!item.querySelector('.px-3.py-2')) {
+                    item.remove();
+                }
+            });
+            
+            // Adicionar tenants customizados ANTES do form
+            if (customTenants.length > 0) {
+                console.log('Adicionando', customTenants.length, 'tenants customizados');
+                
+                // Encontrar o item do form
+                const formItem = Array.from(dropdownMenu.children).find(child => 
+                    child.querySelector && child.querySelector('.px-3.py-2')
+                );
+                
+                customTenants.forEach(tenant => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'custom-tenant-item';
+                    listItem.innerHTML = `
+                        <a class="dropdown-item" href="#" onclick="setTenant('${tenant}')">
+                            <i class="bi bi-building me-2"></i>${tenant}
+                        </a>
+                    `;
+                    
+                    if (formItem) {
+                        dropdownMenu.insertBefore(listItem, formItem);
+                        console.log('Item adicionado antes do form:', tenant);
+                    } else {
+                        dropdownMenu.appendChild(listItem);
+                        console.log('Item adicionado no final:', tenant);
+                    }
+                });
+            } else {
+                console.log('Nenhum tenant customizado para adicionar');
+            }
+        }
+
         function setCustomTenant() {
             const customTenantInput = document.getElementById('customTenant');
             if (customTenantInput && customTenantInput.value.trim() !== '') {
-                setTenant(customTenantInput.value.trim());
-                // Fechar o dropdown após selecionar
-                const dropdown = document.getElementById('tenantDropdown');
+                const tenant = customTenantInput.value.trim();
+                
+                saveCustomTenant(tenant);
+                loadTenantsDropdown();
+                
+                const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('tenantDropdown'));
                 if (dropdown) {
-                    bootstrap.Dropdown.getInstance(dropdown)?.hide();
+                    dropdown.hide();
                 }
+                
+                customTenantInput.value = '';
+                
+                setTenant(tenant);
             } else {
                 alert('Por favor, digite um nome para o tenant customizado.');
+            }
+        }
+
+        function saveCustomTenant(tenant) {
+            if (!tenant || tenant.trim() === '') {
+                console.log('Tenant vazio, não salvando');
+                return;
+            }
+            
+            const customTenants = getCustomTenants();
+            const normalizedTenant = tenant.trim();
+            
+            console.log('Tenants atuais:', customTenants);
+            console.log('Novo tenant a adicionar:', normalizedTenant);
+            
+            // Evitar duplicatas
+            if (!customTenants.includes(normalizedTenant)) {
+                customTenants.push(normalizedTenant);
+                localStorage.setItem(CUSTOM_TENANTS_KEY, JSON.stringify(customTenants));
+                console.log('Tenant salvo com sucesso. Nova lista:', customTenants);
+            } else {
+                console.log('Tenant já existe na lista');
             }
         }
     </script>
