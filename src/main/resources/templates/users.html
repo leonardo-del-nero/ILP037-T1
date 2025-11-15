@@ -22,76 +22,27 @@
         .sidebar {
             min-height: calc(100vh - 56px);
         }
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-people-fill"></i> User Service
-            </a>
-            
-            <div class="d-flex align-items-center">
-                <span class="navbar-text me-3">
-                    Tenant: <span id="currentTenant" class="tenant-badge">Não definido</span>
-                </span>
-                
-                <div class="dropdown">
-                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
-                            id="tenantDropdown" data-bs-toggle="dropdown">
-                        <i class="bi bi-building"></i> Alterar Tenant
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" onclick="setTenant('bradev')">bradev</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <div class="px-3 py-2">
-                                <input type="text" class="form-control form-control-sm" 
-                                       id="customTenant" placeholder="Custom tenant">
-                                <button type="button" class="btn btn-primary btn-sm w-100 mt-2" 
-                                        onclick="setTenant(document.getElementById('customTenant').value)">
-                                    Definir
-                                </button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container-fluid">
         <div class="row">
             <!-- Navigation -->
-            <div class="col-md-3 col-lg-2 bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/">
-                                <i class="bi bi-house-door"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/users">
-                                <i class="bi bi-people"></i> Gerenciar Usuários
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/users/new">
-                                <i class="bi bi-person-plus"></i> Novo Usuário
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="~{fragments/navigation :: navigation}"></div>
 
             <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="container mt-4">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2">Gerenciar Usuários</h1>
-                        <a href="/users/new" class="btn btn-primary">
+                        <a th:href="@{/users/new}" class="btn btn-primary">
                             <i class="bi bi-person-plus"></i> Novo Usuário
                         </a>
                     </div>
@@ -153,18 +104,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light border-top">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <span class="text-muted">User Service &copy; 2024</span>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <span class="text-muted" th:text="'Tenant atual: ' + (${currentTenant} ?: 'Não definido')"></span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/tenant-management.js}"></script>

@@ -19,80 +19,29 @@
         .sidebar {
             min-height: calc(100vh - 56px);
         }
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-people-fill"></i> User Service
-            </a>
-            
-            <div class="d-flex align-items-center">
-                <span class="navbar-text me-3">
-                    Tenant: <span id="currentTenant" class="tenant-badge">Não definido</span>
-                </span>
-                
-                <div class="dropdown">
-                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
-                            id="tenantDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-building"></i> Alterar Tenant
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" onclick="setTenant('bradev')">
-                            <i class="bi bi-1-circle me-2"></i>bradev
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <!-- Os tenants customizados serão inseridos aqui automaticamente -->
-                        <li>
-                            <div class="px-3 py-2">
-                                <input type="text" class="form-control form-control-sm" 
-                                    id="customTenant" placeholder="Digite o tenant">
-                                <button type="button" class="btn btn-primary btn-sm w-100 mt-2" 
-                                        onclick="setCustomTenant()">
-                                    <i class="bi bi-plus-circle"></i> Adicionar Tenant
-                                </button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container-fluid">
         <div class="row">
             <!-- Navigation -->
-            <div class="col-md-3 col-lg-2 bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/">
-                                <i class="bi bi-house-door"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/users">
-                                <i class="bi bi-people"></i> Gerenciar Usuários
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/users/new">
-                                <i class="bi bi-person-plus"></i> Novo Usuário
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="~{fragments/navigation :: navigation}"></div>
 
             <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="container mt-4">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2">Dashboard</h1>
                     </div>
 
+                    <!-- Alertas -->
                     <div th:if="${currentTenant == null}" class="alert alert-warning" role="alert">
                         <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Tenant não definido</h4>
                         <p>Para usar o sistema, você precisa definir um tenant. Use o menu no cabeçalho para selecionar ou criar um tenant.</p>
@@ -101,6 +50,7 @@
                     </div>
 
                     <div th:if="${currentTenant != null}" class="row">
+                        <!-- Cards de Estatísticas -->
                         <div class="col-md-4 mb-4">
                             <div class="card text-white bg-primary">
                                 <div class="card-body">
@@ -136,10 +86,10 @@
                                     </ul>
 
                                     <div class="mt-4">
-                                        <a href="/users" class="btn btn-primary me-2">
+                                        <a th:href="@{/users}" class="btn btn-primary me-2">
                                             <i class="bi bi-people"></i> Gerenciar Usuários
                                         </a>
-                                        <a href="/users/new" class="btn btn-success">
+                                        <a th:href="@{/users/new}" class="btn btn-success">
                                             <i class="bi bi-person-plus"></i> Novo Usuário
                                         </a>
                                     </div>
@@ -153,18 +103,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light border-top">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <span class="text-muted">User Service &copy; 2024</span>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <span class="text-muted" th:text="'Tenant atual: ' + (${currentTenant} ?: 'Não definido')"></span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/tenant-management.js}"></script>

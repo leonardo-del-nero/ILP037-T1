@@ -13,26 +13,23 @@
                         Tenant: <span id="currentTenant" class="tenant-badge">Não definido</span>
                     </span>
                     
-                    <!-- Tenant Selection Dropdown -->
                     <div class="dropdown">
                         <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" 
                                 id="tenantDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-building"></i> Alterar Tenant
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="setTenant('tenant1')">Tenant 1</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setTenant('tenant2')">Tenant 2</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setTenant('tenant3')">Tenant 3</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="setTenant('bradev')">
+                                <i class="bi bi-1-circle me-2"></i>bradev
+                            </a></li>
+                            <!-- Os tenants customizados serão inseridos aqui automaticamente -->
                             <li>
                                 <div class="px-3 py-2">
-                                    <div class="mb-2">
-                                        <input type="text" class="form-control form-control-sm" 
-                                               id="customTenant" placeholder="Custom tenant">
-                                    </div>
-                                    <button type="button" class="btn btn-primary btn-sm w-100" 
-                                            onclick="setTenant(document.getElementById('customTenant').value)">
-                                        Definir
+                                    <input type="text" class="form-control form-control-sm" 
+                                           id="customTenant" placeholder="Digite o tenant">
+                                    <button type="button" class="btn btn-primary btn-sm w-100 mt-2" 
+                                            onclick="setCustomTenant()">
+                                        <i class="bi bi-plus-circle"></i> Adicionar Tenant
                                     </button>
                                 </div>
                             </li>
