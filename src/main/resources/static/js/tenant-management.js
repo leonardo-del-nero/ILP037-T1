@@ -25,13 +25,13 @@ function loadTenantsDropdown() {
     
     if (!dropdownMenu) return;
     
-    // Limpar itens customizados existentes
+    // limpar itens customizados existentes
     const existingCustomItems = dropdownMenu.querySelectorAll('.custom-tenant-item');
     existingCustomItems.forEach(item => item.remove());
     
-    // Adicionar tenants customizados
+    // adicionar tenants customizados
     if (customTenants.length > 0) {
-        // Encontrar o item do form
+        // encontrar o item do form
         const formItem = Array.from(dropdownMenu.children).find(child => 
             child.querySelector && child.querySelector('.px-3.py-2')
         );
@@ -59,13 +59,13 @@ function setTenant(tenant) {
         currentTenant = tenant.trim();
         localStorage.setItem('currentTenant', currentTenant);
         
-        // Salvar tenants customizados (exceto os padrão)
+        // salvar tenants customizados (exceto os padrão)
         const defaultTenants = ['tenant1', 'tenant2', 'tenant3', 'bradev'];
         if (!defaultTenants.includes(currentTenant)) {
             saveCustomTenant(currentTenant);
         }
         
-        // Atualizar visualmente
+        // atualizar visualmente
         const tenantElement = document.getElementById('currentTenant');
         if (tenantElement) {
             tenantElement.textContent = currentTenant;
@@ -118,7 +118,7 @@ function setCustomTenant() {
     }
 }
 
-// Inicialização do tenant
+// inicialização do tenant
 document.addEventListener('DOMContentLoaded', function() {
     const savedTenant = localStorage.getItem('currentTenant');
     if (savedTenant) {

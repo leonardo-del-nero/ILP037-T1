@@ -24,9 +24,6 @@ public class WebController {
 
     @PostMapping("/set-tenant")
     public String setTenant(@RequestParam String tenant, HttpServletRequest request) {
-        System.out.println("=== SET-TENANT ENDPOINT ===");
-        System.out.println("Definindo tenant na sessão: " + tenant);
-
         request.getSession().setAttribute("currentTenant", tenant);
 
         String referer = request.getHeader("Referer");
@@ -58,26 +55,22 @@ public class WebController {
     public String newUserForm(Model model, HttpServletRequest request) {
         String tenant = getTenantFromSession(request);
         model.addAttribute("currentTenant", tenant);
-        return "user-create"; // Template específico para criação
+        return "user-create"; // template específico para criação
     }
 
     @GetMapping("/users/{id}/edit")
     public String editUserForm(@PathVariable("id") Long id, Model model, HttpServletRequest request) {
         try {
             String tenant = getTenantFromSession(request);
-            System.out.println("=== EDITAR USUÁRIO ===");
-            System.out.println("Tenant da sessão: " + tenant);
-            System.out.println("ID do usuário: " + id);
             
-            // Verificar se o tenant está definido
+            // verificar se o tenant está definido
             if (tenant == null) {
                 System.out.println("ERRO: Tenant não definido na sessão");
                 return "redirect:/users?error=Tenant não definido";
             }
 
-            // Buscar o usuário no tenant atual
+            // buscar o usuário no tenant atual
             UserDTO user = userService.findById(id);
-            System.out.println("Usuário encontrado: " + (user != null ? user.getUsername() : "null"));
             
             if (user == null) {
                 System.out.println("ERRO: Usuário não encontrado no tenant " + tenant);
@@ -87,7 +80,6 @@ public class WebController {
             model.addAttribute("currentTenant", tenant);
             model.addAttribute("user", user);
             
-            System.out.println("Redirecionando para página de edição");
             return "user-edit";
         } catch (Exception e) {
             System.out.println("ERRO ao buscar usuário para edição: " + e.getMessage());
@@ -102,27 +94,23 @@ public class WebController {
                            HttpServletRequest request,
                            RedirectAttributes redirectAttributes) {
         try {
-            // Primeiro tentar pegar da sessão, se não conseguir usar o header
+            // primeiro tentar pegar da sessão, se não conseguir usar o header
             String tenant = getTenantFromSession(request);
             if (tenant == null) {
-                // Tentar pegar do header diretamente
+                // tentar pegar do header diretamente
                 tenant = request.getHeader("x-tenant");
                 if (tenant != null) {
-                    // Salvar na sessão para futuras requisições
+                    // salvar na sessão para futuras requisições
                     request.getSession().setAttribute("currentTenant", tenant);
                 }
             }
-            
-            System.out.println("=== CRIANDO USUÁRIO ===");
-            System.out.println("Tenant: " + tenant);
-            System.out.println("Username: " + userDTO.getUsername());
             
             if (tenant == null) {
                 redirectAttributes.addAttribute("error", "Tenant não definido");
                 return "redirect:/users/new";
             }
 
-            // Converter roles
+            // converter roles
             List<String> rolesList = Arrays.stream(rolesInput.split(","))
                     .map(String::trim)
                     .filter(role -> !role.isEmpty())
@@ -131,7 +119,6 @@ public class WebController {
             
             userService.create(userDTO);
             
-            System.out.println("USUÁRIO CRIADO NO TENANT: " + tenant);
             redirectAttributes.addAttribute("success", "Usuário criado com sucesso!");
             return "redirect:/users";
         } catch (Exception e) {
@@ -154,7 +141,7 @@ public class WebController {
                 return "redirect:/users/" + id + "/edit";
             }
 
-            // Converter roles de string para List
+            // converter roles de string para List
             List<String> rolesList = Arrays.stream(rolesInput.split(","))
                     .map(String::trim)
                     .filter(role -> !role.isEmpty())

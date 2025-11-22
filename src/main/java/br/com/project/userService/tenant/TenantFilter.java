@@ -26,10 +26,6 @@ public class TenantFilter extends OncePerRequestFilter  {
         String tenant = request.getHeader("x-tenant");
         String path = request.getRequestURI();
         
-        System.out.println("=== TENANT FILTER ===");
-        System.out.println("Path: " + path);
-        System.out.println("Tenant header: " + tenant);
-        
         // Para requisições da API, exigir o header x-tenant
         if (path.startsWith("/userService/")) {
             if(!StringUtils.hasText(tenant)){
@@ -39,9 +35,7 @@ public class TenantFilter extends OncePerRequestFilter  {
             }
         } else {
             // Para requisições do frontend, tentar pegar da sessão primeiro
-            String sessionTenant = (String) request.getSession().getAttribute("currentTenant");
-            System.out.println("Tenant da sessão: " + sessionTenant);
-            
+            String sessionTenant = (String) request.getSession().getAttribute("currentTenant");            
             if (StringUtils.hasText(sessionTenant)) {
                 // Usar o tenant da sessão se existir
                 tenant = sessionTenant;
@@ -51,7 +45,6 @@ public class TenantFilter extends OncePerRequestFilter  {
             }
         }
         
-        System.out.println("Tenant final: " + tenant);
         tenantIdentifierResolver.setCurrentTenant(tenant);
 
         filterChain.doFilter(request, response);

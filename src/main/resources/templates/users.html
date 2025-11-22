@@ -11,15 +11,15 @@
     
 </head>
 <body>
-    <!-- Header -->
+    <!-- header -->
     <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Navigation -->
+            <!-- navigation -->
             <div th:replace="~{fragments/navigation :: navigation}"></div>
 
-            <!-- Main content -->
+            <!-- main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="container mt-4">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -29,7 +29,7 @@
                         </a>
                     </div>
 
-                    <!-- Alertas -->
+                    <!-- alertas -->
                     <div th:if="${currentTenant == null}" class="alert alert-warning" role="alert">
                         Defina um tenant no cabeçalho para visualizar os usuários.
                     </div>
@@ -44,7 +44,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
 
-                    <!-- Tabela de Usuários -->
+                    <!-- tabela de Usuários -->
                     <div class="card" th:if="${currentTenant != null}">
                         <div class="card-header">
                             <h5 class="card-title mb-0">Lista de Usuários</h5>
@@ -61,7 +61,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="usersTableBody">
-                                        <!-- Preenchido via JavaScript -->
+                                        <!-- preenchido via JavaScript -->
                                     </tbody>
                                 </table>
                             </div>
@@ -85,7 +85,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- footer -->
     <div th:replace="~{fragments/footer :: footer}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

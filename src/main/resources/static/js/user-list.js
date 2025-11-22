@@ -91,10 +91,7 @@ function editUser(userId) {
         return;
     }
 
-    console.log('Preparando edição do usuário ID:', userId);
-    console.log('Com tenant:', tenant);
-
-    // Primeiro garantir que o tenant está definido na sessão do backend
+    // primeiro garantir que o tenant está definido na sessão do backend
     fetch('/set-tenant', {
         method: 'POST',
         headers: {
@@ -106,9 +103,8 @@ function editUser(userId) {
         if (!response.ok) {
             throw new Error('Falha ao definir tenant no servidor');
         }
-        console.log('Tenant definido na sessão, redirecionando...');
         
-        // Pequeno delay para garantir que a sessão foi atualizada
+        // pequeno delay para garantir que a sessão foi atualizada
         setTimeout(() => {
             window.location.href = `/users/${userId}/edit`;
         }, 100);

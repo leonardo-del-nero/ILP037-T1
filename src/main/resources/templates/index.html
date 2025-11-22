@@ -11,22 +11,22 @@
 
 </head>
 <body>
-    <!-- Header -->
+    <!-- header -->
     <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Navigation -->
+            <!-- navigation -->
             <div th:replace="~{fragments/navigation :: navigation}"></div>
 
-            <!-- Main content -->
+            <!-- main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <div class="container mt-4">
                     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                         <h1 class="h2">Dashboard</h1>
                     </div>
 
-                    <!-- Alertas -->
+                    <!-- alertas -->
                     <div th:if="${currentTenant == null}" class="alert alert-warning" role="alert">
                         <h4 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Tenant não definido</h4>
                         <p>Para usar o sistema, você precisa definir um tenant. Use o menu no cabeçalho para selecionar ou criar um tenant.</p>
@@ -35,7 +35,7 @@
                     </div>
 
                     <div th:if="${currentTenant != null}" class="row">
-                        <!-- Cards de Estatísticas -->
+                        <!-- cards de estatísticas -->
                         <div class="col-md-4 mb-4">
                             <div class="card text-white bg-primary">
                                 <div class="card-body">
@@ -50,6 +50,8 @@
                                     </div>
                                 </div>
                             </div>
+                            <br>
+                            <p><strong>Tenant atual:</strong> <span th:text="${currentTenant}" class="badge bg-primary"></span></p>
                         </div>
 
                         <div class="col-md-8">
@@ -58,16 +60,16 @@
                                     <h5 class="card-title mb-0">Bem-vindo ao User Service</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Este é um sistema de gerenciamento de usuários com arquitetura multi-tenant.</p>
-                                    <p><strong>Tenant atual:</strong> <span th:text="${currentTenant}" class="badge bg-primary"></span></p>
+                                    <p>Esta é uma aplicação desenvolvida em Spring Boot que oferece um sistema completo de gerenciamento de usuários com arquitetura multi-tenant, permitindo o isolamento de dados entre diferentes organizações ou clientes.</p>
                                     
                                     <h6>Funcionalidades disponíveis:</h6>
                                     <ul>
-                                        <li>✅ Criar novos usuários</li>
-                                        <li>✅ Listar todos os usuários</li>
-                                        <li>✅ Editar informações de usuários</li>
-                                        <li>✅ Excluir usuários</li>
-                                        <li>✅ Isolamento de dados por tenant</li>
+                                        <li>CRUD completo de usuários com validações customizadas</li>
+                                        <li>Isolamento total de dados entre diferentes tenants</li>
+                                        <li>Interface web responsiva com gerenciamento de tenants</li>
+                                        <li>Segurança com hash BCrypt para senhas</li>
+                                        <li>API REST completa para integrações</li>
+                                        <li>Sessão por tenant com fallback automático</li>
                                     </ul>
 
                                     <div class="mt-4">
@@ -87,7 +89,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- footer -->
     <div th:replace="~{fragments/footer :: footer}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
