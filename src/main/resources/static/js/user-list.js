@@ -63,7 +63,7 @@ function loadUsers() {
                     <td>${escapeHtml(user.username)}</td>
                     <td>${rolesHtml}</td>
                     <td class="table-actions">
-                        <a href="/users/${user.id}/edit" class="btn btn-sm btn-outline-primary me-1">
+                        <a href="/users/${user.id}/edit" class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
@@ -80,6 +80,42 @@ function loadUsers() {
             loadingMessage.style.display = 'none';
         }
         showAlert('error', 'Erro ao carregar usuários: ' + error.message);
+    });
+}
+
+function editUser(userId) {
+    const tenant = localStorage.getItem('currentTenant');
+    
+    if (!tenant) {
+        alert('Tenant não definido. Selecione um tenant primeiro.');
+        return;
+    }
+
+    console.log('Preparando edição do usuário ID:', userId);
+    console.log('Com tenant:', tenant);
+
+    // Primeiro garantir que o tenant está definido na sessão do backend
+    fetch('/set-tenant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `tenant=${encodeURIComponent(tenant)}`
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Falha ao definir tenant no servidor');
+        }
+        console.log('Tenant definido na sessão, redirecionando...');
+        
+        // Pequeno delay para garantir que a sessão foi atualizada
+        setTimeout(() => {
+            window.location.href = `/users/${userId}/edit`;
+        }, 100);
+    })
+    .catch(error => {
+        console.error('Erro ao definir tenant para edição:', error);
+        alert('Erro ao preparar edição: ' + error.message);
     });
 }
 

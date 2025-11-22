@@ -65,11 +65,33 @@ public class WebController {
     public String editUserForm(@PathVariable("id") Long id, Model model, HttpServletRequest request) {
         try {
             String tenant = getTenantFromSession(request);
-            model.addAttribute("currentTenant", tenant);
+            System.out.println("=== EDITAR USUÁRIO ===");
+            System.out.println("Tenant da sessão: " + tenant);
+            System.out.println("ID do usuário: " + id);
+            
+            // Verificar se o tenant está definido
+            if (tenant == null) {
+                System.out.println("ERRO: Tenant não definido na sessão");
+                return "redirect:/users?error=Tenant não definido";
+            }
+
+            // Buscar o usuário no tenant atual
             UserDTO user = userService.findById(id);
+            System.out.println("Usuário encontrado: " + (user != null ? user.getUsername() : "null"));
+            
+            if (user == null) {
+                System.out.println("ERRO: Usuário não encontrado no tenant " + tenant);
+                return "redirect:/users?error=Usuário não encontrado no tenant atual";
+            }
+
+            model.addAttribute("currentTenant", tenant);
             model.addAttribute("user", user);
+            
+            System.out.println("Redirecionando para página de edição");
             return "user-edit";
         } catch (Exception e) {
+            System.out.println("ERRO ao buscar usuário para edição: " + e.getMessage());
+            e.printStackTrace();
             return "redirect:/users?error=Usuário não encontrado";
         }
     }
