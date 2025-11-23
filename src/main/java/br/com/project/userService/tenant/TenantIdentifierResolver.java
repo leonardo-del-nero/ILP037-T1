@@ -8,13 +8,18 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomi
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import lombok.Setter;
-
+// Removemos o @Setter do Lombok pois faremos manualmente para o ThreadLocal
 @Component
 public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver<String>, HibernatePropertiesCustomizer {
 
-    @Setter
-    private String currentTenant = "unknown";
+    // MUDANÇA PRINCIPAL: Usamos ThreadLocal ao invés de String simples
+    // Isso garante que cada requisição HTTP tenha seu próprio valor de tenant isolado
+    private final ThreadLocal<String> currentTenant = ThreadLocal.withInitial(() -> "unknown");
+
+    // Método manual para definir o tenant no ThreadLocal (usado pelo TenantFilter)
+    public void setCurrentTenant(String tenant) {
+        this.currentTenant.set(tenant);
+    }
 
     @Override
     public void customize(Map<String, Object> hibernateProperties) {
@@ -23,12 +28,12 @@ public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver
 
     @Override
     public @NonNull String resolveCurrentTenantIdentifier() {
-        return currentTenant;
+        // Retorna o valor isolado da thread atual
+        return currentTenant.get();
     }
 
     @Override
     public boolean validateExistingCurrentSessions() {
         return true;
     }
-
 }
