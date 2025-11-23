@@ -29,29 +29,42 @@ O projeto original era uma API REST com acoplamento forte a bibliotecas externas
 ---
 
 ## 🏛️ Arquitetura do Sistema
+A aplicação segue a **Layered Architecture** (Camadas) típica do Spring Boot, mas enriquecida para suportar o modelo híbrido, separando claramente as responsabilidades de Interface Gráfica e API.
 
-A aplicação segue a **Layered Architecture** (Camadas) típica do Spring Boot, mas enriquecida para suportar o modelo híbrido:
+### 1. MVC (Model-View-Controller) - Frontend
+Utilizado para o Dashboard Administrativo (Server-Side Rendering).
 
-* **Controller Layer**:
-    * `UserController`: API REST (`/userService/users`).
-    * `WebController`: Interface Gráfica Thymeleaf (`/`).
-* **Service Layer**: Camada de negócio agnóstica que orquestra os Design Patterns.
-* **Domain Layer**: Entidades (`UserEntity`) e Interfaces.
-* **Infrastructure**: Implementações concretas (Adapters, Strategies, TenantResolvers).
+* **Controller (`C`):** `.../controller/WebController.java`
+    * *Responsabilidade:* Intercepta requisições do navegador, gerencia a sessão do tenant e popula o `Model`.
+* **View (`V`):** `src/main/resources/templates/`
+    * *Responsabilidade:* Arquivos HTML (`index.html`, `users.html`) renderizados dinamicamente pelo Thymeleaf.
+* **Model (`M`):** Objeto `Model` do Spring
+    * *Responsabilidade:* Transporta dados (ex: `UserDTO`, `currentTenant`) do Controller para a View.
 
-> **Nota sobre C4 Model:** Os diagramas de contexto e container (Nível 1 e 2) exigidos na atividade encontram-se na pasta `/docs` do repositório.
+### 2. CSR (Controller-Service-Repository) - API REST
+Utilizado no núcleo do backend para regras de negócio e endpoints JSON.
+
+* **Controller (`C`):** `.../controller/UserController.java`
+    * *Responsabilidade:* Ponto de entrada da API. Recebe JSON, valida inputs e retorna códigos HTTP.
+* **Service (`S`):** `.../service/UserService.java`
+    * *Responsabilidade:* Camada agnóstica onde residem as regras de negócio e a orquestração dos Design Patterns.
+* **Repository (`R`):** `.../repository/UserRepository.java`
+    * *Responsabilidade:* Interface de comunicação com o banco de dados via Spring Data JPA.
 
 ---
 
+> **Nota sobre C4 Model:** Os diagramas de contexto e container (Nível 1 e 2) exigidos na atividade encontram-se na pasta `/docs` do repositório.
+
+
 ## 🏗️ Design Patterns Aplicados
 
-Detalhes técnicos da refatoração para resolver problemas de acoplamento do sistema legado.
+Detalhes da refatoração focando na **justificativa** de cada escolha para resolver problemas de acoplamento.
 
 ### 1. Strategy (Comportamental) - Validação de Senha
 
-* **Problema (Legado)**: Regras de validação (tamanho, regex) ficavam espalhadas ou presas a anotações rígidas (`@Constraint`), dificultando a troca dinâmica de políticas de segurança.
-* **Solução (Pattern)**: Interface `PasswordStrategy`.
-* **Implementação**: O Service delega a validação. A classe `StrongPasswordStrategy` encapsula a regra atual (mínimo 8 chars + caracteres especiais).
+* **Problema**: Regras de validação (tamanho, regex) rígidas dificultavam a troca de políticas de segurança sem alterar a classe principal.
+* **Justificativa (Por que usar?)**: O padrão permite trocar a "estratégia" de validação em tempo de execução ou por configuração, respeitando o princípio **Open/Closed (OCP)**.
+* **Implementação**: O Service delega a validação para a interface `PasswordStrategy`.
 
 ```java
 // Interface
@@ -59,13 +72,13 @@ public interface PasswordStrategy {
     void validate(String password);
 }
 
-// Implementação Concreta
+// Implementação Concreta (Strategy)
 @Component
 @Primary
 public class StrongPasswordStrategy implements PasswordStrategy {
     public void validate(String password) {
         if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("A senha deve ter pelo menos 8 caracteres.");
+            throw new IllegalArgumentException("Erro: Senha fraca.");
         }
         // ... validação de regex
     }
@@ -74,9 +87,9 @@ public class StrongPasswordStrategy implements PasswordStrategy {
 
 ### 2. Factory (Criacional) - Criação de Usuário
 
-* **Problema (Legado)**: O Service dependia diretamente do `DozerMapper` e injetava o `PasswordEncoder`, misturando responsabilidades de mapeamento com regras de criptografia.
-* **Solução (Pattern)**: Centralizar a criação na `UserFactory`.
-* **Implementação**: A Factory remove a dependência do Dozer e encapsula a regra de que "todo novo usuário deve ter a senha hashada".
+* **Problema**: A criação de usuários envolvia lógica complexa (conversão DTO, hash de senha, roles padrão) espalhada pelo Service.
+* **Justificativa (Por que usar?)**: Centraliza a complexidade de instanciação e garante a **consistência** dos dados. A Factory assegura que *nenhum* usuário seja criado no sistema sem que a senha passe pelo algoritmo de hash (BCrypt).
+* **Implementação**: Classe `UserFactory` encapsula o `PasswordEncoder`.
 
 ```java
 @Component
@@ -87,7 +100,7 @@ public class UserFactory {
     public UserEntity createEntityFromDTO(UserDTO dto) {
         UserEntity entity = new UserEntity();
         entity.setUsername(dto.getUsername());
-        // A Factory encapsula a regra de hash BCrypt
+        // A Factory aplica a regra de segurança obrigatoriamente
         entity.setPassword(passwordEncoder.encode(dto.getPassword())); 
         entity.setRoles(dto.getRoles());
         return entity;
@@ -97,22 +110,22 @@ public class UserFactory {
 
 ### 3. Adapter (Estrutural) - Sistema de Auditoria
 
-* **Problema (Legado)**: Inexistência de logs estruturados ou dependência direta de `System.out` e classes de I/O dentro do Service.
-* **Solução (Pattern)**: Interface `AuditService` e adaptador `FileAuditAdapter`.
-* **Implementação**: O `FileAuditAdapter` adapta a interface de domínio para a escrita física em arquivo (`audit.log`), isolando a complexidade de `java.io`.
+* **Problema**: O Service dependia diretamente de bibliotecas de I/O (`java.io.FileWriter`), dificultando testes e acoplando o negócio ao sistema de arquivos.
+* **Justificativa (Por que usar?)**: Desacopla a regra de negócio da infraestrutura. O Service depende apenas da abstração (`AuditService`), permitindo que a implementação concreta (Arquivo, Banco, Console) seja trocada sem impacto no código core.
+* **Implementação**: O `FileAuditAdapter` adapta a interface de domínio para a escrita física.
 
 ```java
-// O Service depende apenas desta Interface
+// Interface (Domínio)
 public interface AuditService {
     void log(String operacao, String detalhes);
 }
 
-// O Adapter implementa a escrita em arquivo
+// Adapter (Infraestrutura)
 @Component
 public class FileAuditAdapter implements AuditService {
     public void log(String operacao, String detalhes) {
         try (FileWriter fw = new FileWriter("audit.log", true)) {
-            // Escrita no disco
+            // Adaptação para escrita em disco
         }
     }
 }
