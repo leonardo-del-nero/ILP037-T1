@@ -15,6 +15,20 @@ O sistema possui tanto uma **API REST** quanto uma **Interface Web (Dashboard)**
 
 ---
 
+## 🏛️ Arquitetura do Sistema
+
+Em conformidade com as boas práticas de desenvolvimento e os requisitos do projeto, a aplicação segue a **Arquitetura em Camadas (Layered Architecture)** típica do ecossistema Spring Boot. Ele integra o padrão **MVC (Model-View-Controller)** para a interface web e **REST** para a API, além de implementar uma arquitetura **Multi-tenant**.
+
+A separação de responsabilidades é definida da seguinte forma:
+
+* **Controller (Web/API)**: Gerencia requisições HTTP, valida DTOs e direciona o fluxo.
+* **Service (Business)**: Encapsula as regras de negócio e aplica os Design Patterns.
+* **Repository (Data)**: Abstrai o acesso ao banco H2 via Spring Data JPA.
+* **Tenant Layer**: Responsável por interceptar e isolar os dados com base na origem da requisição (`x-tenant` ou sessão).
+* **Domain/Model**: Representa as entidades do negócio (`UserEntity`) e objetos de transferência (`UserDTO`).
+
+---
+
 ## 🏗️ Design Patterns Aplicados
 
 O projeto foca na utilização de boas práticas de Engenharia de Software. Abaixo estão os detalhes e exemplos de código da implementação:
