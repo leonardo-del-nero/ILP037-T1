@@ -1,12 +1,11 @@
 package br.com.project.userService.service;
 
 import java.util.List;
-
 import org.springframework.stereotype.Service;
 
-// Importações dos novos padrões
+// Imports dos novos padrões
 import br.com.project.userService.adapter.AuditService;
-import br.com.project.userService.strategy.NotificationStrategy;
+import br.com.project.userService.strategy.PasswordStrategy;
 
 import br.com.project.userService.domain.UserEntity;
 import br.com.project.userService.dto.UserDTO;
@@ -20,35 +19,45 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository repository;
-    private final UserFactory userFactory; // Padrão Criacional (Factory) já existente
+    private final UserFactory userFactory;
     
-    // Novos Padrões Injetados
-    private final AuditService auditService;              // Padrão Estrutural (Adapter)
-    private final NotificationStrategy notificationStrategy; // Padrão Comportamental (Strategy)
+    // Padrões Injetados
+    private final AuditService auditService;      // Adapter (File)
+    private final PasswordStrategy passwordStrategy; // Strategy (Validação)
 
     public UserDTO create(UserDTO dto) {
+        // 1. STRATEGY: Valida a senha antes de qualquer coisa
+        // Se a senha for fraca, ele estoura um erro e nem salva no banco
+        passwordStrategy.validate(dto.getPassword());
+
         UserEntity entity = userFactory.createEntityFromDTO(dto);
         UserEntity result = repository.save(entity);
         UserDTO resultDTO = userFactory.createDTOFromEntity(result);
-        
-        // Usa o Adapter para registrar auditoria
-        auditService.log("CRIAR_USUARIO", "ID criado: " + result.getId());
-        
-        // Usa o Strategy para notificar
-        notificationStrategy.notificar(resultDTO, "Bem-vindo ao sistema!");
+
+        // 2. ADAPTER: Grava no arquivo audit.log
+        auditService.log("CREATE", "Usuario criado com sucesso. ID: " + result.getId());
         
         return resultDTO;
     }
 
     public UserDTO update(long id, UserDTO source) {
+        // Também validamos na atualização!
+        if (source.getPassword() != null && !source.getPassword().isEmpty()) {
+             passwordStrategy.validate(source.getPassword());
+        }
+
         UserEntity target = repository.findById(id).orElseThrow(RecordNotFoundException::new);
         target.setUsername(source.getUsername());
         target.setRoles(source.getRoles());
         
+        // Se a senha foi enviada, atualiza (cuidado: idealmente criptografaríamos aqui tbm, 
+        // mas o foco é o padrão Strategy)
+        // target.setPassword(...) 
+        
         UserEntity result = repository.save(target);
         
-        // Usa o Adapter
-        auditService.log("ATUALIZAR_USUARIO", "ID atualizado: " + id);
+        // Grava no arquivo
+        auditService.log("UPDATE", "Usuario atualizado. ID: " + id);
         
         return userFactory.createDTOFromEntity(result);
     }
@@ -57,8 +66,8 @@ public class UserService {
         UserEntity entity = repository.findById(id).orElseThrow(RecordNotFoundException::new);
         repository.delete(entity);
         
-        // Usa o Adapter
-        auditService.log("DELETAR_USUARIO", "ID removido: " + id);
+        // Grava no arquivo
+        auditService.log("DELETE", "Usuario removido. ID: " + id);
     }
 
     public UserDTO findById(long id) {
